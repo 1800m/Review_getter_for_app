@@ -28,10 +28,26 @@ rss_size = (len(rss_list)-2)/2
 
 #ジャンルの数だけ繰り返す
 for i in range(0, rss_size):
-    name_output = "output_TopFreeApp100_" + rss_list[i*2]
+    genre = rss_list[i*2]       #ジャンル名
 
+    rss_url = rss_list[i*2+1]   #ジャンルに対するURL
+    rss_request = urllib2.Request(rss_url)
+    response = urllib2.urlopen(rss_request)
+    rss = response.read().decode("utf-8")
+
+    # RSSからデータを抽出する
+    soup = BeautifulSoup(rss, "html.parser")
     #出力結果を書き込む
-    f = open('./output/'+name_output+'.dat', 'w')
+    f = open('./output/output_TopFreeApp100_' + genre + '.dat', 'w')
+    for entry in soup.find_all("entry"):
+        # タイトル
+        f.writelines(entry.find("title").string.encode('utf-8')+'\n')
+        # リンク先URL
+        f.writelines(entry.find("id").string.encode('utf-8')+'\n')
+        # 視聴URL
+        links = [link for link in entry.find_all("link") if link["type"] == "audio/x-m4a"]
+        if len(links) > 0:
+            f.writelines(links[0]["href"]+'\n')
     f.close()
 
 
